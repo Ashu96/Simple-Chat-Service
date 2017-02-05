@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <script src="//code.jquery.com/jquery.js"></script>
+        <script src='/socket.io/socket.io.js'></script>
+        <script>
+
+            $(function() {
+
+                // connect to server
+                var socket = io.connect(window.location.href);
+
+                // when a message is emitted from server, display in the chat window.
+                socket.on('message:server', function(data) {
+                    $("#messages").append(
+                        '<li style="color:red">' +
+                        data.message + ' - ' + 'received' + ' ' + new Date() +
+                        '</li>'
+                    );
+                });
+
+                // handle the form's "submit" event so as to not let it actually POST to server
+                $("#message_form").on('submit', function(event) {
+
+                    // prevent POST
+                    event.preventDefault();
+
+                    // grab the "message" field from the form
+                    var $input = $('[name="message"]')
+                    var message = $input.val();
+
+                    // send message from client
+                    if (message) {
+                        socket.emit('message:client', {message: message});
+                    }
+
+                    // display message in UI
+                    $("#messages").append(
+                        '<li style="color:green">' + 
+                        message + ' - ' + 'sent' + ' ' + new Date() +
+                        '</li>'
+                    );
+
+                    // clear form
+                    $input.val('');
+                });
+
+                // listen for errors
+                socket.on('error', function() {
+                    console.error(arguments)
+                });
+            });
+
+        </script>
+        <title>Chat</title>
+    </head>
+    <body class="container-fluid">
+        <ul id="messages"> </ul>
+
+        <form class="form-inline" id="message_form" method="post">
+        <div class="form-group">
+        	<input name="message" placeholder="Message to send" autofocus="true" type="text"/>
+        </div>
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+    </body>
+</html>
